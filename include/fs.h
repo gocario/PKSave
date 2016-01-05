@@ -12,8 +12,8 @@
 typedef struct
 {
 	FS_MediaType mediatype : 8; ///< The mediatype of the FS_Path
-	u8 lowerSaveid; ///< The lower word of the saveid
-	u8 upperSaveid; ///< The upper word of the saveid
+	u8 lowerSaveId; ///< The lower word of the saveid
+	u8 upperSaveId; ///< The upper word of the saveid
 } FS_UserSaveData_PathData;
 
 extern Handle* fsHandle;
@@ -82,7 +82,7 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive);
  * @param archive The archive to control.
  * @return The error encountered.
  */
-Result FSUSER_ControlArchive(FS_Archive* archive);
+Result _FSUSER_ControlArchive(FS_Archive* archive);
 
 
 /**
