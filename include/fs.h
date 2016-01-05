@@ -8,6 +8,14 @@
 
 #include <3ds/services/fs.h>
 
+/// The data of a user savedata archive's path
+typedef struct
+{
+	FS_MediaType mediatype : 8; ///< The mediatype of the FS_Path
+	u8 lowerSaveid; ///< The lower word of the saveid
+	u8 upperSaveid; ///< The upper word of the saveid
+} FS_UserSaveData_PathData;
+
 extern Handle* fsHandle;
 extern FS_Archive sdmcArchive;
 extern FS_Archive saveArchive;
@@ -81,12 +89,12 @@ Result FSUSER_ControlArchive(FS_Archive* archive);
  * @brief Initializes the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysInit();
+Result FS_FilesysInit(void);
 
 /**
  * @brief Exits the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysExit();
+Result FS_FilesysExit(void);
 
 #endif // FS_H
