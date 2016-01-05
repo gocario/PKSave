@@ -6,6 +6,10 @@
 #ifndef FS_H
 #define FS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <3ds/services/fs.h>
 
 /// The data of a user savedata archive's path
@@ -96,5 +100,9 @@ Result FS_FilesysInit(void);
  * @return The error encountered.
  */
 Result FS_FilesysExit(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FS_H
