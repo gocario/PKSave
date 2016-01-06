@@ -12,15 +12,14 @@ extern "C" {
 
 #include <3ds/services/fs.h>
 
-/// The data of a user savedata archive's path
+/// The data of a user savedata archive's lowpath
 typedef struct
 {
-	FS_MediaType mediatype : 8; ///< The mediatype of the FS_Path
-	u8 lowerSaveId; ///< The lower word of the saveid
-	u8 upperSaveId; ///< The upper word of the saveid
-} FS_UserSaveData_PathData;
+	u32 mediatype; ///< The mediatype of the FS_Path
+	u32 lowid; ///< The lower word of the saveid
+	u32 highid; ///< The upper word of the saveid
+} FS_UserSaveData_LowPathData;
 
-extern Handle* fsHandle;
 extern FS_Archive sdmcArchive;
 extern FS_Archive saveArchive;
 
@@ -47,17 +46,6 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* bytesWritten);
 
 /**
- * @brief Writes src to a file (path), which need a control operation.
- * @param path The path of the file to write.
- * @param src The source buffer.
- * @param size The size of bytes to write.
- * @param archive The archive where the file is located.
- * @param bytesWritten The total of written bytes.
- * @return The error encountered.
- */
-Result FS_WriteSFile(char* path, void* src, u64 size, FS_Archive* archive, u32* bytesWritten);
-
-/**
  * @brief Deletes a file (path).
  * @param path The path of the file to delete.
  * @param archive The archive where the file is located.
@@ -66,28 +54,12 @@ Result FS_WriteSFile(char* path, void* src, u64 size, FS_Archive* archive, u32* 
 Result FS_DeleteFile(char* path, FS_Archive* archive);
 
 /**
- * @brief Deletes a file (path), which need a control operation.
- * @param path The path of the file to delete.
- * @param archive The archive where the file is located.
- * @return The error encountered.
- */
-Result FS_DeleteSFile(char* path, FS_Archive* archive);
-
-/**
  * @brief Creates a directory (path).
  * @param path The path of the directory to create.
  * @param archive The archive where the directory will be located.
  * @return The error encountered.
  */
 Result FS_CreateDirectory(char* path, FS_Archive* archive);
-
-/**
- * @brief Performs a control operation on an archive.
- * @param archive The archive to control.
- * @return The error encountered.
- */
-Result _FSUSER_ControlArchive(FS_Archive* archive);
-
 
 /**
  * @brief Initializes the filesystem service.
