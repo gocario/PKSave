@@ -7,6 +7,7 @@
 
 /**
  * @brief Prompt the data structure.
- * @return The data structure.
+ * @param archive The archive to return.
+ * @return The error encountered.
  */
-FS_Archive launchTitleSelector(void);
+Result launchTitleSelector(FS_Archive* archive);
