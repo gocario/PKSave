@@ -49,7 +49,7 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 		if (R_FAILED(ret) || *bytesRead < size) ret = -3;
 	}
 
-	FSFILE_Close(fileHandle);
+	ret = FSFILE_Close(fileHandle);
 #ifdef DEBUG_FS
 	printf(" > FSFILE_Close: %lx\n", ret);
 #endif
@@ -83,7 +83,7 @@ Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* b
 		if (R_FAILED(ret)) return ret;
 	}
 
-	FSFILE_Close(fileHandle);
+	ret = FSFILE_Close(fileHandle);
 #ifdef DEBUG_FS
 	printf(" > FSFILE_Close: %lx\n", ret);
 #endif
@@ -134,13 +134,19 @@ Result FS_FilesysInit(void)
 {
 	Result ret = 0;
 
-	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
-
-	// TODO saveArchive (FS_Archive)
-
 #ifdef DEBUG_FS
 	printf("FS_filesysInit:\n");
 #endif
+
+	ret = fsInit();
+#ifdef DEBUG_FS
+	printf(" > fsInit: %lx\n", ret);
+#endif
+	if (R_FAILED(ret)) return ret;
+
+	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
+
+	// TODO saveArchive (FS_Archive)
 
 	ret = FSUSER_OpenArchive(&sdmcArchive);
 #ifdef DEBUG_FS
@@ -179,6 +185,11 @@ Result FS_FilesysExit(void)
 	ret = FSUSER_CloseArchive(&saveArchive);
 #ifdef DEBUG_FS
 	printf(" > FSUSER_CloseArchive: %lx\n", ret);
+#endif
+
+	fsExit();
+#ifdef DEBUG_FS
+	printf(" > fsExit\n");
 #endif
 
 	return ret;
