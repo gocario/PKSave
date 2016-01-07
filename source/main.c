@@ -40,10 +40,10 @@ int main(int argc, char* argv[])
 	printf("           Pokemon save manager\n");
 	printf("\n\n\n\n");
 	printf("    Commands:\n\n");
-	printf("        - Press X to export to SD\n\n");
-	printf("        - Press Y to import from SD\n\n");
-	printf("        - Press A to backup to SD\n\n");
-	printf("        - Press B to exit\n\n");
+	printf("        \a Press X to export to SD\n\n");
+	printf("        \a Press Y to import from SD\n\n");
+	printf("        \a Press A to backup to SD\n\n");
+	printf("        \a Press B to exit\n\n");
 	printf("\n\n\n\n\n\n");
 	printf("              Made for PCHex++ & PHBank\n\n");
 	printf("                 By Gocario & Slashcash");
