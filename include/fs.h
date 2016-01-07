@@ -30,6 +30,12 @@ extern FS_Archive saveArchive;
 bool FS_IsInitialized(void);
 
 /**
+ * @brief Return true if the archive is initialized.
+ * @return Whether the archive id is initialized.
+ */
+bool FS_IsArchiveInitialized(FS_Archive* archive);
+
+/**
  * @brief Reads a file (path) to dst.
  * @param path The path of the file to read.
  * @param dst The destination buffer.
@@ -66,6 +72,13 @@ Result FS_DeleteFile(char* path, FS_Archive* archive);
  * @return The error encountered.
  */
 Result FS_CreateDirectory(char* path, FS_Archive* archive);
+
+/**
+ * @brief Commit an archive.
+ * @param The archive to commit.
+ * @return The error encountered.
+ */
+Result FS_CommitArchive(FS_Archive* archive);
 
 /**
  * @brief Initializes the filesystem service.

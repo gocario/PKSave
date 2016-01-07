@@ -56,6 +56,11 @@ Result Save_importSavedata(void)
 		sprintf(path, "%smain", rootFolder);
 		ret = FS_DeleteFile(path, &saveArchive);
 		ret = FS_WriteFile(path, (void*) savedata, bytesRead, &saveArchive, &bytesWritten);
+
+		if (R_SUCCEEDED(ret))
+		{
+			ret = FS_CommitArchive(&saveArchive);
+		}
 	}
 
 	free(savedata);

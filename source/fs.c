@@ -28,9 +28,9 @@ FS_Archive saveArchive;
 /**
  * @return Whether the archive is working.
  */
-static bool _FS_FixBasicArchive(FS_Archive** archive)
+static bool FS_FixBasicArchive(FS_Archive** archive)
 {
-	printf("_FS_FixBasicArchive:\n");
+	printf("FS_FixBasicArchive:\n");
 
 	if (!saveInitialized && *archive == &saveArchive)
 	{
@@ -55,12 +55,20 @@ bool FS_IsInitialized(void)
 }
 
 
+bool FS_IsArchiveInitialized(FS_Archive* archive)
+{
+	return
+		(archive->id == ARCHIVE_SDMC && sdmcInitialized) ||
+		(archive->id == ARCHIVE_SAVEDATA && saveInitialized);
+}
+
+
 Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32* bytesRead)
 {
 	if (!path || !dst || !archive) return -1;
 	
 #ifdef DEBUG_FS
-	if (!_FS_FixBasicArchive(&archive)) return -1;
+	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
@@ -109,7 +117,7 @@ Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* b
 	if (!path || !src || !archive) return -1;
 
 #ifdef DEBUG_FS
-	if (!_FS_FixBasicArchive(&archive)) return -1;
+	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
@@ -147,7 +155,7 @@ Result FS_DeleteFile(char* path, FS_Archive* archive)
 	if (!path || !archive) return -1;
 	
 #ifdef DEBUG_FS
-	if (!_FS_FixBasicArchive(&archive)) return -1;
+	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
@@ -170,7 +178,7 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 	if (!path || !archive) return -1;
 	
 #ifdef DEBUG_FS
-	if (!_FS_FixBasicArchive(&archive)) return -1;
+	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
@@ -185,6 +193,23 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 #endif
 
 	return ret;
+}
+
+
+Result FS_CommitArchive(FS_Archive* archive)
+{
+	Result ret;
+
+#ifdef DEBUG_FS
+	printf("FS_CommitArchive:\n");
+#endif
+
+		ret = FSUSER_ControlArchive(*archive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
+#ifdef DEBUG_FS
+		printf(" > FSUSER_ControlArchive: %lx\n", ret);
+#endif
+
+		return ret;
 }
 
 
@@ -250,9 +275,9 @@ Result FS_FilesysExit(void)
 
 	if (saveInitialized)
 	{
-		ret = FSUSER_ControlArchive(saveArchive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
+		ret = FS_CommitArchive(&saveArchive);
 #ifdef DEBUG_FS
-		printf(" > FSUSER_ControlArchive: %lx\n", ret);
+		printf(" > FS_CommitArchive: %lx\n", ret);
 #endif
 
 		ret = FSUSER_CloseArchive(&saveArchive);
