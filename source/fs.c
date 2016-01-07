@@ -30,11 +30,19 @@ FS_Archive saveArchive;
  */
 static bool _FS_FixBasicArchive(FS_Archive** archive)
 {
+	printf("_FS_FixBasicArchive:\n");
+
 	if (!saveInitialized && *archive == &saveArchive)
+	{
+		printf("   Save archive not initialized\n");
 		*archive = &sdmcArchive;
+	}
 
 	if (!sdmcInitialized && *archive == &sdmcArchive)
+	{
+		printf("   Sdmc archive not initialized\n");
 		*archive = NULL;
+	}
 
 	return (*archive != NULL);
 }
@@ -189,6 +197,16 @@ Result FS_FilesysInit(void)
 	printf("FS_filesysInit:\n");
 #endif
 
+	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
+
+	ret = FSUSER_OpenArchive(&sdmcArchive);
+#ifdef DEBUG_FS
+	printf(" > FSUSER_OpenArchive: %lx\n", ret);
+#endif
+	if (R_FAILED(ret)) return ret;
+
+	sdmcInitialized = true;
+
 	fsHandle = fsGetSessionHandle();
 #ifdef DEBUG_FS
 	printf(" > fsGetSessionHandle\n");
@@ -199,16 +217,6 @@ Result FS_FilesysInit(void)
 	printf(" > FSUSER_Initialize: %lx\n", ret);
 #endif
 	if (R_FAILED(ret)) return ret;
-
-	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
-
-	ret = FSUSER_OpenArchive(&sdmcArchive);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_OpenArchive: %lx\n", ret);
-#endif
-	if (R_FAILED(ret)) return ret;
-
-	sdmcInitialized = true;
 
 	saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
 
