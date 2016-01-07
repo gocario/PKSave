@@ -15,9 +15,9 @@ extern "C" {
 /// The data of a user savedata archive's lowpath
 typedef struct
 {
-	u32 mediatype; ///< The mediatype of the FS_Path
-	u32 lowid; ///< The lower word of the saveid
-	u32 highid; ///< The upper word of the saveid
+	u32 mediatype; 	///< The mediatype of the FS_Path
+	u32 lowid; 		///< The lower word of the saveid
+	u32 highid; 	///< The upper word of the saveid
 } FS_UserSaveData_LowPathData;
 
 extern FS_Archive sdmcArchive;
