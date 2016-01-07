@@ -11,12 +11,49 @@
 #include <stdio.h>
 #endif
 
+typedef enum {
+	STATE_UNINITIALIZED,
+	STATE_INITIALIZING,
+	STATE_INITIALIZED,
+} FS_State;
+
+static Handle* fsHandle = NULL;
+static FS_State fsState = STATE_UNINITIALIZED;
+static bool sdmcInitialized = false;
+static bool saveInitialized = false;
 FS_Archive sdmcArchive;
 FS_Archive saveArchive;
+
+#ifdef DEBUG_FS
+/**
+ * @return Whether the archive is working.
+ */
+static bool _FS_FixBasicArchive(FS_Archive** archive)
+{
+	if (!saveInitialized && *archive == &saveArchive)
+		*archive = &sdmcArchive;
+
+	if (!sdmcInitialized && *archive == &sdmcArchive)
+		*archive = NULL;
+
+	return (*archive != NULL);
+}
+#endif
+
+
+bool FS_IsInitialized(void)
+{
+	return (fsState == STATE_INITIALIZED);
+}
+
 
 Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32* bytesRead)
 {
 	if (!path || !dst || !archive) return -1;
+	
+#ifdef DEBUG_FS
+	if (!_FS_FixBasicArchive(&archive)) return -1;
+#endif
 
 	Result ret;
 	u64 size;
@@ -30,6 +67,7 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 #ifdef DEBUG_FS
 	printf(" > FSUSER_OpenFile: %lx\n", ret);
 #endif
+	if (R_FAILED(ret)) return ret;
 
 	if (R_SUCCEEDED(ret))
 	{
@@ -61,6 +99,10 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* bytesWritten)
 {
 	if (!path || !src || !archive) return -1;
+
+#ifdef DEBUG_FS
+	if (!_FS_FixBasicArchive(&archive)) return -1;
+#endif
 
 	Result ret;
 	Handle fileHandle;
@@ -95,6 +137,10 @@ Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* b
 Result FS_DeleteFile(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
+	
+#ifdef DEBUG_FS
+	if (!_FS_FixBasicArchive(&archive)) return -1;
+#endif
 
 	Result ret;
 
@@ -114,6 +160,10 @@ Result FS_DeleteFile(char* path, FS_Archive* archive)
 Result FS_CreateDirectory(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
+	
+#ifdef DEBUG_FS
+	if (!_FS_FixBasicArchive(&archive)) return -1;
+#endif
 
 	Result ret;
 
@@ -133,20 +183,24 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 Result FS_FilesysInit(void)
 {
 	Result ret = 0;
+	fsState = STATE_INITIALIZING;
 
 #ifdef DEBUG_FS
 	printf("FS_filesysInit:\n");
 #endif
 
-	ret = fsInit();
+	fsHandle = fsGetSessionHandle();
 #ifdef DEBUG_FS
-	printf(" > fsInit: %lx\n", ret);
+	printf(" > fsGetSessionHandle\n");
+#endif
+
+	ret = FSUSER_Initialize(*fsHandle);
+#ifdef DEBUG_FS
+	printf(" > FSUSER_Initialize: %lx\n", ret);
 #endif
 	if (R_FAILED(ret)) return ret;
 
 	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
-
-	// TODO saveArchive (FS_Archive)
 
 	ret = FSUSER_OpenArchive(&sdmcArchive);
 #ifdef DEBUG_FS
@@ -154,12 +208,19 @@ Result FS_FilesysInit(void)
 #endif
 	if (R_FAILED(ret)) return ret;
 
+	sdmcInitialized = true;
+
+	saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
+
 	ret = FSUSER_OpenArchive(&saveArchive);
 #ifdef DEBUG_FS
 	printf(" > FSUSER_OpenArchive: %lx\n", ret);
 #endif
 	if (R_FAILED(ret)) return ret;
 
+	saveInitialized = true;
+
+	fsState = STATE_INITIALIZED;
 	return ret;
 }
 
@@ -177,20 +238,23 @@ Result FS_FilesysExit(void)
 	printf(" > FSUSER_CloseArchive: %lx\n", ret);
 #endif
 
-	ret = FSUSER_ControlArchive(saveArchive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
+	sdmcInitialized = false;
+
+	if (saveInitialized)
+	{
+		ret = FSUSER_ControlArchive(saveArchive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
 #ifdef DEBUG_FS
-	printf(" > FSUSER_ControlArchive: %lx\n", ret);
+		printf(" > FSUSER_ControlArchive: %lx\n", ret);
 #endif
 
-	ret = FSUSER_CloseArchive(&saveArchive);
+		ret = FSUSER_CloseArchive(&saveArchive);
 #ifdef DEBUG_FS
-	printf(" > FSUSER_CloseArchive: %lx\n", ret);
+		printf(" > FSUSER_CloseArchive: %lx\n", ret);
 #endif
 
-	fsExit();
-#ifdef DEBUG_FS
-	printf(" > fsExit\n");
-#endif
+		saveInitialized = false;
+	}
 
+	fsState = STATE_UNINITIALIZED;
 	return ret;
 }

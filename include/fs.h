@@ -24,6 +24,12 @@ extern FS_Archive sdmcArchive;
 extern FS_Archive saveArchive;
 
 /**
+ * @brief Return true if FS is initialized.
+ * @return Whether FS is initialized.
+ */
+bool FS_IsInitialized(void);
+
+/**
  * @brief Reads a file (path) to dst.
  * @param path The path of the file to read.
  * @param dst The destination buffer.
