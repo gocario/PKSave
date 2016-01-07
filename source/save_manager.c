@@ -20,14 +20,14 @@ Result Save_exportSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8 savedata[SAVEDATA_MAX_SIZE];
 
-	ret = FS_CreateDirectory(baseFolder, &sdmcArchive);
-	ret = FS_CreateDirectory(saveFolder, &sdmcArchive);
-	
+	ret = FS_CreateDirectory((char*) baseFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) saveFolder, &sdmcArchive);
+
 	sprintf(path, "main");
 	ret = FS_ReadFile(path, (void*) savedata, &saveArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 	if (R_FAILED(ret)) return ret;
 
-	sprintf(path, "%smain", saveFolder);
+	sprintf(path, "%smain", (char*) saveFolder);
 	ret = FS_DeleteFile(path, &sdmcArchive);
 	ret = FS_WriteFile(path, (void*) savedata, bytesRead, &sdmcArchive, &bytesWritten);
 	if (R_FAILED(ret)) return ret;
@@ -44,7 +44,7 @@ Result Save_importSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8 savedata[SAVEDATA_MAX_SIZE];
 
-	sprintf(path, "%smain", saveFolder);
+	sprintf(path, "%smain", (char*) saveFolder);
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 	if (R_FAILED(ret)) return ret;
 
@@ -65,8 +65,8 @@ Result Save_backupSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8 savedata[SAVEDATA_MAX_SIZE];
 
-	ret = FS_CreateDirectory(baseFolder, &sdmcArchive);
-	ret = FS_CreateDirectory(backupFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) baseFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) backupFolder, &sdmcArchive);
 
 	sprintf(path, "main");
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
