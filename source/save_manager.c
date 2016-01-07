@@ -1,4 +1,5 @@
 #include "save_manager.h"
+#include "pkdir.h"
 #include "fs.h"
 
 #include <3ds/result.h>
@@ -8,11 +9,6 @@
 #include <stdlib.h>
 
 #define SAVEDATA_MAX_SIZE 0x76000 // SAVEDATA_ORAS_SIZE
-
-static const char* rootFolder = "/";
-static const char* baseFolder = "/pk/";
-static const char* saveFolder = "/pk/save/";
-static const char* backupFolder = "/pk/backup/";
 
 Result Save_exportSavedata(void)
 {
