@@ -7,18 +7,24 @@
 #define PKDIR_H
 
 /**
+ * @brief Save file.
+ */
+extern const char* pk_saveFile;
+extern const char* pk_bankFile;
+
+/**
  * @brief Shared folders.
  */
-extern const char* rootFolder;
-extern const char* baseFolder;
-extern const char* saveFolder;
-extern const char* backupFolder;
-extern const char* dataFolder;
+extern const char* pk_rootFolder;
+extern const char* pk_baseFolder;
+extern const char* pk_saveFolder;
+extern const char* pk_backupFolder;
+extern const char* pk_dataFolder;
 
 /**
  * @brief Brew folders.
  */
-extern const char* bankFolder;
-extern const char* hexFolder;
+extern const char* pk_bankFolder;
+extern const char* pk_hexFolder;
 
 #endif // PKDIR_H

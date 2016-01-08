@@ -18,15 +18,15 @@ Result Save_exportSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8* savedata = malloc(SAVEDATA_MAX_SIZE * sizeof(u8));
 
-	ret = FS_CreateDirectory((char*) baseFolder, &sdmcArchive);
-	ret = FS_CreateDirectory((char*) saveFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) pk_baseFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) pk_saveFolder, &sdmcArchive);
 
-	sprintf(path, "%smain", rootFolder);
+	sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 	ret = FS_ReadFile(path, savedata, &saveArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 
 	if (R_SUCCEEDED(ret))
 	{
-		sprintf(path, "%smain", (char*) saveFolder);
+		sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 		ret = FS_DeleteFile(path, &sdmcArchive);
 		ret = FS_WriteFile(path, savedata, bytesRead, &sdmcArchive, &bytesWritten);
 	}
@@ -44,12 +44,12 @@ Result Save_importSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8* savedata = malloc(SAVEDATA_MAX_SIZE * sizeof(u8));
 
-	sprintf(path, "%smain", (char*) saveFolder);
+	sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 	
 	if (R_SUCCEEDED(ret))
 	{
-		sprintf(path, "%smain", rootFolder);
+		sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 		ret = FS_DeleteFile(path, &saveArchive);
 		ret = FS_WriteFile(path, (void*) savedata, bytesRead, &saveArchive, &bytesWritten);
 
@@ -72,15 +72,15 @@ Result Save_backupSavedata(void)
 	u32 bytesRead, bytesWritten;
 	u8* savedata = malloc(SAVEDATA_MAX_SIZE * sizeof(u8));
 
-	ret = FS_CreateDirectory((char*) baseFolder, &sdmcArchive);
-	ret = FS_CreateDirectory((char*) backupFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) pk_baseFolder, &sdmcArchive);
+	ret = FS_CreateDirectory((char*) pk_backupFolder, &sdmcArchive);
 
-	sprintf(path, "%smain", rootFolder);
+	sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 	ret = FS_ReadFile(path, savedata, &saveArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 	
 	if (R_SUCCEEDED(ret))
 	{
-		sprintf(path, "%smain_%lli", backupFolder, osGetTime()/* - 2208988800L*/);
+		sprintf(path, "%s_%s%lli", pk_backupFolder, pk_saveFile, osGetTime()/* - 2208988800L*/);
 		ret = FS_WriteFile(path, savedata, bytesRead, &sdmcArchive, &bytesWritten);
 	}
 
