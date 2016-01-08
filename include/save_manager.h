@@ -13,19 +13,19 @@ extern "C" {
 #include <3ds/types.h>
 
 /**
- * @brief Export the savedata from the card/title to the SD.
+ * @brief Exports the savedata from the card/title to the SD.
  * @return The error encountered.
  */
 Result Save_exportSavedata(void);
 
 /**
- * @brief Import the savedata from the SD to the card/title.
+ * @brief Imports the savedata from the SD to the card/title.
  * @return The error encountered.
  */
 Result Save_importSavedata(void);
 
 /**
- * @brief Backup the savedata from the card/title to the SD.
+ * @brief Backs up the savedata from the card/title to the SD.
  * @return The error encountered.
  */
 Result Save_backupSavedata(void);

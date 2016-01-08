@@ -7,7 +7,7 @@
 #define PKDIR_H
 
 /**
- * @brief Save file.
+ * @brief Brew files.
  */
 extern const char* pk_saveFile;
 extern const char* pk_bankFile;

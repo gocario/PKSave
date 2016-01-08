@@ -12,7 +12,9 @@ extern "C" {
 
 #include <3ds/services/fs.h>
 
-/// The data of a user savedata archive's lowpath
+/**
+ * @brief The data of a user savedata archive's lowpath.
+ */
 typedef struct
 {
 	u32 mediatype; 	///< The mediatype of the FS_Path
@@ -24,13 +26,13 @@ extern FS_Archive sdmcArchive;
 extern FS_Archive saveArchive;
 
 /**
- * @brief Return true if FS is initialized.
+ * @brief Returns true if FS is initialized.
  * @return Whether FS is initialized.
  */
 bool FS_IsInitialized(void);
 
 /**
- * @brief Return true if the archive is initialized.
+ * @brief Returns true if the archive is initialized.
  * @return Whether the archive id is initialized.
  */
 bool FS_IsArchiveInitialized(FS_Archive* archive);
@@ -74,7 +76,7 @@ Result FS_DeleteFile(char* path, FS_Archive* archive);
 Result FS_CreateDirectory(char* path, FS_Archive* archive);
 
 /**
- * @brief Commit an archive.
+ * @brief Commits an archive.
  * @param The archive to commit.
  * @return The error encountered.
  */
