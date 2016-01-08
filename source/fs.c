@@ -57,9 +57,8 @@ bool FS_IsInitialized(void)
 
 bool FS_IsArchiveInitialized(FS_Archive* archive)
 {
-	return
-		(archive->id == ARCHIVE_SDMC && sdmcInitialized) ||
-		(archive->id == ARCHIVE_SAVEDATA && saveInitialized);
+	return (archive->id == ARCHIVE_SDMC && sdmcInitialized)
+		|| (archive->id == ARCHIVE_SAVEDATA && saveInitialized);
 }
 
 
@@ -264,7 +263,7 @@ Result FS_FilesysExit(void)
 	printf("FS_filesysExit:\n");
 #endif
 
-	if (saveInitialized)
+	if (sdmcInitialized)
 	{
 		ret = FSUSER_CloseArchive(&sdmcArchive);
 #ifdef DEBUG_FS
