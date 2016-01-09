@@ -61,21 +61,21 @@ int main(int argc, char* argv[])
 		{
 			printf("Exporting\n");
 			Result ret = Save_exportSavedata();
-			printf("Exported? %li\n", ret);
+			printf("Export result: %li\n", ret);
 		}
 
 		if (kDown & KEY_Y)
 		{
 			printf("Importing\n");
 			Result ret = Save_importSavedata();
-			printf("Imported: %li\n", ret);
+			printf("Import result: %li\n", ret);
 		}
 
 		if (kDown & KEY_A)
 		{
 			printf("Backing up\n");
 			Result ret = Save_backupSavedata();
-			printf("Backed up: %li\n", ret);
+			printf("Back up result: %li\n", ret);
 		}
 
 		if (kDown & KEY_B)
