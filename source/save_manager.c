@@ -128,6 +128,8 @@ Result Save_fixSecureValue(u8* savedata, u8* svSavedata, u32 bytesRead, u32 svBy
 
 	u32 offset = Save_svOffset(bytesRead);
 
+	// ASK Return an error code if same secure values?
+
 	memcpy((void*) savedata + offset, (void*) svSavedata + offset, SV_SIZE);
 
 	return 0;

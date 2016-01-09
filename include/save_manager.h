@@ -31,18 +31,18 @@ Result Save_importSavedata(void);
 Result Save_backupSavedata(void);
 
 /**
- * @brief Return the offset of the secure value depending on the bytes read.
+ * @brief Returns the offset of the secure value depending on the bytes read.
  * @param bytesRead The number of bytes read.
  * @return The offset of the secure value.
  */
 u32 Save_svOffset(u32 bytesRead);
 
 /**
- * @brief Add the secure value from the clean savedata to the modified savedata.
+ * @brief Adds the secure value from the clean savedata to the savedata to fix.
  * @param savedata The savedata to fix.
  * @param svSavedata The clean savedata.
  * @param bytesRead The number of bytes read of the savedata to fix.
- * @param bytesRead The number of bytes read of the cleaned savedata.
+ * @param svBytesRead The number of bytes read of the cleaned savedata.
  * @return The error encountered.
  */
 Result Save_fixSecureValue(u8* savedata, u8* svSavedata, u32 bytesRead, u32 svBytesRead);
