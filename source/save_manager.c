@@ -2,8 +2,9 @@
 #include "pkdir.h"
 #include "fs.h"
 
-#include <3ds/result.h>
 #include <3ds/os.h>
+#include <3ds/result.h>
+#include <3ds/services/apt.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,39 @@
 #define SV_XY_OFFSET   (0x65400)
 #define SV_ORAS_OFFSET (0x75e00)
 
+#define TID_X  (0x0004000000055D00LL)
+#define TID_Y  (0x0004000000055E00LL)
+#define TID_OR (0x000400000011C400LL)
+#define TID_AS (0x000400000011C500LL)
+
+static union { 
+	u64 id;
+	struct {
+		u64 platform : 16;
+		u64 contentCategory : 16;
+		u64 uniqueId : 24;
+		u64 variation : 8;
+	};
+} title;
+
+static FS_MediaType mediaType;
+
+Result Save_getTitleId()
+{
+	aptOpenSession();
+	Result ret = APT_GetProgramID(&title.id);
+	if (R_FAILED(ret)) title.id = 0;
+	aptCloseSession();
+	return ret;
+}
+
+
+Result Save_getMediaType()
+{
+	Result ret = FSUSER_GetMediaType(&mediaType);
+	if (R_FAILED(ret)) mediaType = 3;
+	return ret;
+}
 
 
 Result Save_exportSavedata(void)
@@ -57,15 +91,9 @@ Result Save_importSavedata(void)
 	sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 
-	if (R_SUCCEEDED(ret))
+	if (R_SUCCEEDED(ret) && bytesRead == Save_titleIdToSize(title.id))
 	{
-		u32 svBytesRead;
-		u8* svSavedata = malloc(SAVEDATA_MAX_SIZE);
-
-		sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
-		ret = FS_ReadFile(path, (void*) svSavedata, &saveArchive, SAVEDATA_MAX_SIZE, &svBytesRead);
-
-		ret = Save_fixSecureValue(savedata, svSavedata, bytesRead, svBytesRead);
+		ret = Save_removeSecureValue();
 
 		ret = FS_DeleteFile(path, &saveArchive);
 		ret = FS_WriteFile(path, (void*) savedata, bytesRead, &saveArchive, &bytesWritten);
@@ -111,26 +139,57 @@ Result Save_backupSavedata(void)
 }
 
 
-u32 Save_svOffset(u32 bytesRead)
+u32 Save_svOffsetSize(u32 size)
 {
-	if (bytesRead == SAVEDATA_XY_SIZE)
-		return SV_XY_OFFSET;
-	else if (bytesRead == SAVEDATA_ORAS_SIZE)
-		return SV_ORAS_OFFSET;
-	else return 0;
+	switch (size)
+	{
+		case SAVEDATA_XY_SIZE: return SV_XY_OFFSET;
+		case SAVEDATA_ORAS_SIZE: return SV_ORAS_OFFSET;
+		default: return 0;
+	}
 }
 
 
 Result Save_fixSecureValue(u8* savedata, u8* svSavedata, u32 bytesRead, u32 svBytesRead)
 {
-	if (!svSavedata || !svSavedata) return -1;
+	if (!savedata || !svSavedata) return -1;
 	if (bytesRead != svBytesRead || bytesRead < SAVEDATA_MIN_SIZE) return -2;
 
-	u32 offset = Save_svOffset(bytesRead);
-
-	// ASK Return an error code if same secure values?
+	u32 offset = Save_svOffsetSize(bytesRead);
 
 	memcpy((void*) savedata + offset, (void*) svSavedata + offset, SV_SIZE);
 
 	return 0;
+}
+
+
+u32 Save_titleIdToSize(u64 titleId)
+{
+	switch (titleId)
+	{
+		case TID_X:
+		case TID_Y:
+			return SAVEDATA_XY_SIZE;
+		case TID_OR:
+		case TID_AS:
+			return SAVEDATA_ORAS_SIZE;
+		default:
+			return 0;
+	}
+}
+
+
+Result Save_removeSecureValue()
+{
+	// if (mediaType != MEDIATYPE_SD) // ASK Which one?
+	if (mediaType == MEDIATYPE_GAME_CARD) return -1;
+
+	Result ret;
+	u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | (title.uniqueId << 8) | title.variation;
+	u8 out;
+
+	ret = FSUSER_ControlSecureSave(SECURESAVE_ACTION_DELETE, &in, 8, &out, 1);
+	if (R_FAILED(ret)) return ret;
+
+	return out;
 }
