@@ -34,6 +34,7 @@ bool FS_IsInitialized(void);
 /**
  * @brief Returns true if the archive is initialized.
  * @return Whether the archive id is initialized.
+ * @deprecated @useless
  */
 bool FS_IsArchiveInitialized(FS_Archive* archive);
 

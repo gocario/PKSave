@@ -6,6 +6,7 @@
 #include <3ds/svc.h>
 
 #define DEBUG_FS
+#define DEBUG_FIX_ARCHIVE_FS
 
 #ifdef DEBUG_FS
 #include <stdio.h>
@@ -13,6 +14,7 @@
 
 typedef enum {
 	STATE_UNINITIALIZED,
+	STATE_UNINITIALIZING,
 	STATE_INITIALIZING,
 	STATE_INITIALIZED,
 } FS_State;
@@ -24,23 +26,29 @@ static bool saveInitialized = false;
 FS_Archive sdmcArchive;
 FS_Archive saveArchive;
 
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 /**
- * @return Whether the archive is working.
+ * @return Whether the archive fix is working.
  */
 static bool FS_FixBasicArchive(FS_Archive** archive)
 {
+#ifdef DEBUG_FS
 	printf("FS_FixBasicArchive:\n");
+#endif
 
 	if (!saveInitialized && *archive == &saveArchive)
 	{
+#ifdef DEBUG_FS
 		printf("   Save archive not initialized\n");
+#endif
 		*archive = &sdmcArchive;
 	}
 
 	if (!sdmcInitialized && *archive == &sdmcArchive)
 	{
+#ifdef DEBUG_FS
 		printf("   Sdmc archive not initialized\n");
+#endif
 		*archive = NULL;
 	}
 
@@ -52,6 +60,7 @@ static bool FS_FixBasicArchive(FS_Archive** archive)
 bool FS_IsInitialized(void)
 {
 	return (fsState == STATE_INITIALIZED);
+	// return (sdmcInitialize && saveInitialized);
 }
 
 
@@ -66,7 +75,7 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 {
 	if (!path || !dst || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
@@ -112,7 +121,7 @@ Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* b
 {
 	if (!path || !src || !archive) return -1;
 
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
@@ -151,7 +160,7 @@ Result FS_DeleteFile(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
@@ -174,7 +183,7 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
@@ -219,36 +228,43 @@ Result FS_fsInit(void)
 	printf("FS_filesysInit:\n");
 #endif
 
-	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
+	if (!sdmcInitialized)
+	{
+		sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
 
-	ret = FSUSER_OpenArchive(&sdmcArchive);
+		ret = FSUSER_OpenArchive(&sdmcArchive);
 #ifdef DEBUG_FS
-	printf(" > FSUSER_OpenArchive: %lx\n", ret);
+		printf(" > FSUSER_OpenArchive: %lx\n", ret);
 #endif
-	if (R_FAILED(ret)) return ret;
+		if (R_FAILED(ret)) return ret;
 
-	sdmcInitialized = true;
+		sdmcInitialized = true;
+	}
 
-	fsHandle = fsGetSessionHandle();
+	if (!saveInitialized)
+	{
+
+		fsHandle = fsGetSessionHandle();
 #ifdef DEBUG_FS
-	printf(" > fsGetSessionHandle\n");
+		printf(" > fsGetSessionHandle\n");
 #endif
 
-	ret = FSUSER_Initialize(*fsHandle);
+		ret = FSUSER_Initialize(*fsHandle);
 #ifdef DEBUG_FS
-	printf(" > FSUSER_Initialize: %lx\n", ret);
+		printf(" > FSUSER_Initialize: %lx\n", ret);
 #endif
-	if (R_FAILED(ret)) return ret;
+		if (R_FAILED(ret)) return ret;
 
-	saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
+		saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
 
-	ret = FSUSER_OpenArchive(&saveArchive);
+		ret = FSUSER_OpenArchive(&saveArchive);
 #ifdef DEBUG_FS
-	printf(" > FSUSER_OpenArchive: %lx\n", ret);
+		printf(" > FSUSER_OpenArchive: %lx\n", ret);
 #endif
-	if (R_FAILED(ret)) return ret;
+		if (R_FAILED(ret)) return ret;
 
-	saveInitialized = true;
+		saveInitialized = true;
+	}
 
 	fsState = STATE_INITIALIZED;
 	return ret;
@@ -258,7 +274,7 @@ Result FS_fsInit(void)
 Result FS_fsExit(void)
 {
 	Result ret = 0;
-
+	fsState = STATE_UNINITIALIZING;
 #ifdef DEBUG_FS
 	printf("FS_filesysExit:\n");
 #endif
