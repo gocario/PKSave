@@ -150,27 +150,18 @@ Result Save_backupSavedata(void)
 }
 
 
-u32 Save_svOffsetSize(u32 size)
+bool Save_titleIdIsPokemon(u64 titleId)
 {
-	switch (size)
+	switch (titleId)
 	{
-		case SAVEDATA_XY_SIZE: return SV_XY_OFFSET;
-		case SAVEDATA_ORAS_SIZE: return SV_ORAS_OFFSET;
-		default: return 0;
+		case TID_X:
+		case TID_Y:
+		case TID_OR:
+		case TID_AS:
+			return true;
+		default:
+			return false;
 	}
-}
-
-
-Result Save_fixSecureValue(u8* savedata, u8* svSavedata, u32 bytesRead, u32 svBytesRead)
-{
-	if (!savedata || !svSavedata) return -1;
-	if (bytesRead != svBytesRead || bytesRead < SAVEDATA_MIN_SIZE) return -2;
-
-	u32 offset = Save_svOffsetSize(bytesRead);
-
-	memcpy((void*) savedata + offset, (void*) svSavedata + offset, SV_SIZE);
-
-	return 0;
 }
 
 

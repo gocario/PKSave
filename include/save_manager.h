@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @file fs.h
+ * @file save_manager.h
  * @brief Save Manager
  */
 #ifndef SAVE_MANAGER_H
@@ -43,29 +43,15 @@ Result Save_importSavedata(void);
 Result Save_backupSavedata(void);
 
 /**
- * @brief Returns the offset of the secure value depending on the size in bytes.
- * @param bytesRead The size of the save in bytes.
- * @return The offset of the secure value.
- * @deprecated
- * @see Save_fixSecureValue
+ * @brief Checks if a title id is a Pokémon title id.
+ * @param titleId The id of the title.
+ * @return Whether the title is a Pokémon title.
  */
-u32 Save_svOffsetSize(u32 size);
-
-/**
- * @brief Adds the secure value from the clean savedata to the savedata to fix.
- * @param savedata The savedata to fix.
- * @param svSavedata The clean savedata.
- * @param bytesRead The number of bytes read of the savedata to fix.
- * @param svBytesRead The number of bytes read of the cleaned savedata.
- * @return The error encountered.
- * @deprecated
- * @see Save_fixSecureValue
- */
-Result Save_fixSecureValue(u8* savedata, u8* svSavedata, u32 bytesRead, u32 svBytesRead);
+bool Save_titleIdIsPokemon(u64 titleId);
 
 /**
  * @brief Retrieves the size of the savedata of a title based on its id.
- * @param titleId Id of the title.
+ * @param titleId The id of the title.
  * @return The size of the savedata of the tile.
  */
 u32 Save_titleIdToSize(u64 titleId);
