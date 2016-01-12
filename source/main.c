@@ -24,8 +24,6 @@ int main(int argc, char* argv[])
 
 	FS_fsInit();
 
-	Save_getTitleId();
-
 	if (!FS_IsInitialized())
 	{
 		printf("\nFS not fully initialized!\n");
@@ -37,7 +35,7 @@ int main(int argc, char* argv[])
 		printf("Good to go!\n\n");
 	}
 
-	if (Save_getTitleId())
+	if (Save_getTitleId(NULL))
 	{
 		printf("\nCouldn't get the title id!\n");
 	}
@@ -63,7 +61,6 @@ int main(int argc, char* argv[])
 	u32 kDown;
 	while (aptMainLoop())
 	{
-
 		hidScanInput();
 
 		kDown = hidKeysDown();
@@ -72,21 +69,45 @@ int main(int argc, char* argv[])
 		{
 			printf("Exporting\n");
 			Result ret = Save_exportSavedata();
-			printf("Export result: %li\n", ret);
+
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nExportation was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething mess up with the export!\n\n");
+			}
 		}
 
 		if (kDown & KEY_Y)
 		{
 			printf("Importing\n");
 			Result ret = Save_importSavedata();
-			printf("Import result: %li\n", ret);
+
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nImportation was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething mess up with the import!\n\n");
+			}
 		}
 
 		if (kDown & KEY_A)
 		{
 			printf("Backing up\n");
 			Result ret = Save_backupSavedata();
-			printf("Back up result: %li\n", ret);
+
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nThe backup was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething mess up with the backup!\n\n");
+			}
 		}
 
 		if (kDown & KEY_B)

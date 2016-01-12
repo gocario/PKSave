@@ -24,24 +24,55 @@
 #define TID_OR (0x000400000011C400LL)
 #define TID_AS (0x000400000011C500LL)
 
-static union { 
-	u64 id;
-	struct {
-		u64 platform : 16;
-		u64 contentCategory : 16;
-		u64 uniqueId : 24;
-		u64 variation : 8;
-	};
-} title;
+static u64 _titleId;
 
-
-Result Save_getTitleId()
+Result Save_getTitleId(u64* titleId)
 {
+	Result ret;
+
 	aptOpenSession();
-	Result ret = APT_GetProgramID(&title.id);
-	if (R_FAILED(ret)) title.id = 0;
+
+	ret = APT_GetProgramID(&_titleId);
+	printf(" > APT_GetProgramID: %lx\n", ret);
+	if (R_FAILED(ret)) _titleId = 0;
+
 	aptCloseSession();
+
+	if (titleId) *titleId = _titleId;
+	printf("    > tid: 0x%016llx\n", _titleId);
+
 	return ret;
+}
+
+
+bool Save_titleIdIsPokemon(u64 titleId)
+{
+	switch (titleId)
+	{
+		case TID_X:
+		case TID_Y:
+		case TID_OR:
+		case TID_AS:
+			return true;
+		default:
+			return false;
+	}
+}
+
+
+u32 Save_titleIdToSize(u64 titleId)
+{
+	switch (titleId)
+	{
+		case TID_X:
+		case TID_Y:
+			return SAVEDATA_XY_SIZE;
+		case TID_OR:
+		case TID_AS:
+			return SAVEDATA_ORAS_SIZE;
+		default:
+			return 0;
+	}
 }
 
 
@@ -92,10 +123,13 @@ Result Save_importSavedata(void)
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
 	printf(" > FS_ReadFile: %lx\n", ret);
 
-	if (R_SUCCEEDED(ret) && bytesRead == Save_titleIdToSize(title.id))
+	// Check that is the same type of game that the export's.
+	if (R_SUCCEEDED(ret) && bytesRead == Save_titleIdToSize(_titleId))
 	{
-		ret = Save_removeSecureValue();
+		ret = Save_removeSecureValue(NULL);
+		printf(" > Save_removeSecureValue: %lx\n", ret);
 
+		sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 		ret = FS_DeleteFile(path, &saveArchive);
 		printf(" > FS_DeleteFile: %lx\n", ret);
 		ret = FS_WriteFile(path, (void*) savedata, bytesRead, &saveArchive, &bytesWritten);
@@ -150,38 +184,7 @@ Result Save_backupSavedata(void)
 }
 
 
-bool Save_titleIdIsPokemon(u64 titleId)
-{
-	switch (titleId)
-	{
-		case TID_X:
-		case TID_Y:
-		case TID_OR:
-		case TID_AS:
-			return true;
-		default:
-			return false;
-	}
-}
-
-
-u32 Save_titleIdToSize(u64 titleId)
-{
-	switch (titleId)
-	{
-		case TID_X:
-		case TID_Y:
-			return SAVEDATA_XY_SIZE;
-		case TID_OR:
-		case TID_AS:
-			return SAVEDATA_ORAS_SIZE;
-		default:
-			return 0;
-	}
-}
-
-
-Result Save_removeSecureValue()
+Result Save_removeSecureValue(u8* ptr)
 {
 	printf("Save_removeSecureValue\n");
 
@@ -193,12 +196,16 @@ Result Save_removeSecureValue()
 	if (R_FAILED(ret)) return ret;
 	if (mediaType != MEDIATYPE_SD) return -1;
 
-	u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | (title.uniqueId << 8) | title.variation;
+	u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | (_titleId & 0xFFFFFFFF);
+	// u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | ((u32) _titleId);
 	u8 out;
 
 	ret = FSUSER_ControlSecureSave(SECURESAVE_ACTION_DELETE, &in, 8, &out, 1);
 	printf(" > FSUSER_ControlSecureSave: %lx\n", ret);
-	if (R_FAILED(ret)) return ret;
+	// if (R_FAILED(ret)) return ret;
 
-	return out;
+	if (ptr) *ptr = out;
+	printf("    > out: %d\n", out);
+
+	return ret;
 }

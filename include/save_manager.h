@@ -14,9 +14,24 @@ extern "C" {
 
 /**
  * @brief Retrieves some data of the current process.
+ * @param titleId @optional The title id returned;
  * @return The error encountered.
  */
-Result Save_getTitleId(void);
+Result Save_getTitleId(u64* titleId);
+
+/**
+ * @brief Checks if a title id is a Pokémon title id.
+ * @param titleId The id of the title.
+ * @return Whether the title is a Pokémon title.
+ */
+bool Save_titleIdIsPokemon(u64 titleId);
+
+/**
+ * @brief Retrieves the size of the savedata of a title based on its id.
+ * @param titleId The id of the title.
+ * @return The size of the savedata of the tile.
+ */
+u32 Save_titleIdToSize(u64 titleId);
 
 /**
  * @brief Retrieves some data of the current process.
@@ -43,24 +58,11 @@ Result Save_importSavedata(void);
 Result Save_backupSavedata(void);
 
 /**
- * @brief Checks if a title id is a Pokémon title id.
- * @param titleId The id of the title.
- * @return Whether the title is a Pokémon title.
- */
-bool Save_titleIdIsPokemon(u64 titleId);
-
-/**
- * @brief Retrieves the size of the savedata of a title based on its id.
- * @param titleId The id of the title.
- * @return The size of the savedata of the tile.
- */
-u32 Save_titleIdToSize(u64 titleId);
-
-/**
  * @brief remove the secure value of the title in the NAND.
+ * @param ptr @optional The out value returned.
  * @return The error encountered.
  */
-Result Save_removeSecureValue();
+Result Save_removeSecureValue(u8* ptr);
 
 #ifdef __cplusplus
 }
