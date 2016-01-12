@@ -25,7 +25,6 @@ int main(int argc, char* argv[])
 	FS_FilesysInit();
 
 	Save_getTitleId();
-	Save_getMediaType();
 
 	if (!FS_IsInitialized())
 	{
