@@ -86,13 +86,13 @@ Result FS_CommitArchive(FS_Archive* archive);
  * @brief Initializes the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysInit(void);
+Result FS_fsInit(void);
 
 /**
  * @brief Exits the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysExit(void);
+Result FS_fsExit(void);
 
 #ifdef __cplusplus
 }

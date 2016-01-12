@@ -210,7 +210,7 @@ Result FS_CommitArchive(FS_Archive* archive)
 }
 
 
-Result FS_FilesysInit(void)
+Result FS_fsInit(void)
 {
 	Result ret = 0;
 	fsState = STATE_INITIALIZING;
@@ -255,7 +255,7 @@ Result FS_FilesysInit(void)
 }
 
 
-Result FS_FilesysExit(void)
+Result FS_fsExit(void)
 {
 	Result ret = 0;
 

@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	consoleInit(GFX_TOP, &cmdConsole);
 	consoleInit(GFX_BOTTOM, &logConsole);
 
-	FS_FilesysInit();
+	FS_fsInit();
 
 	Save_getTitleId();
 
@@ -35,6 +35,15 @@ int main(int argc, char* argv[])
 	{
 		printf("\nFS fully initialized!\n");
 		printf("Good to go!\n\n");
+	}
+
+	if (Save_getTitleId())
+	{
+		printf("\nCouldn't get the title id!");
+	}
+	else
+	{
+		printf("\nTitle id well got!");
 	}
 
 	consoleSelect(&cmdConsole);
@@ -88,8 +97,7 @@ int main(int argc, char* argv[])
 		gspWaitForVBlank();
 	}
 
-	FS_FilesysExit();
-
+	FS_fsExit();
 	gfxExit();
 	return 0;
 }
