@@ -65,6 +65,11 @@ int main(int argc, char* argv[])
 
 		kDown = hidKeysDown();
 
+		if (kDown & KEY_SELECT)
+		{
+			Save_removeSecureValue(NULL);
+		}
+
 		if (kDown & KEY_X)
 		{
 			printf("Exporting\n");

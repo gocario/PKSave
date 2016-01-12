@@ -2,11 +2,14 @@
 
 #include <3ds/services/fs.h>
 #include <3ds/result.h>
+#include <3ds/ipc.h>
 #include <3ds/srv.h>
 #include <3ds/svc.h>
 
+#include <string.h>
+
 #define DEBUG_FS
-#define DEBUG_FIX_ARCHIVE_FS
+// #define DEBUG_FIX_ARCHIVE_FS
 
 #ifdef DEBUG_FS
 #include <stdio.h>
@@ -19,7 +22,7 @@ typedef enum {
 	STATE_INITIALIZED,
 } FS_State;
 
-static Handle* fsHandle = NULL;
+static Handle fsHandle;
 static FS_State fsState = STATE_UNINITIALIZED;
 static bool sdmcInitialized = false;
 static bool saveInitialized = false;
@@ -55,6 +58,25 @@ static bool FS_FixBasicArchive(FS_Archive** archive)
 	return (*archive != NULL);
 }
 #endif
+
+
+static Result _srvGetServiceHandle(Handle* out, const char* name)
+{
+	Result ret;
+
+	u32* cmdbuf = getThreadCommandBuffer();
+	cmdbuf[0] = IPC_MakeHeader(0x5,4,0); // 0x50100
+	strcpy((char*) &cmdbuf[1], name);
+	cmdbuf[3] = strlen(name);
+	cmdbuf[4] = 0x0;
+
+	ret = svcSendSyncRequest(*srvGetSessionHandle());
+	if (R_FAILED(ret)) return ret;
+
+	if (out) *out = cmdbuf[3];
+
+	return cmdbuf[1];
+}
 
 
 bool FS_IsInitialized(void)
@@ -228,6 +250,23 @@ Result FS_fsInit(void)
 	printf("FS_filesysInit:\n");
 #endif
 
+	ret = _srvGetServiceHandle(&fsHandle, "fs:USER");
+#ifdef DEBUG_FS
+	printf(" > _srvGetServiceHandle: %lx\n", ret);
+#endif
+	if (R_FAILED(ret)) return ret;
+
+	ret = FSUSER_Initialize(fsHandle);
+#ifdef DEBUG_FS
+	printf(" > FSUSER_Initialize: %lx\n", ret);
+#endif
+	if (R_FAILED(ret)) return ret;
+
+	fsUseSession(fsHandle, false);
+#ifdef DEBUG_FS
+	printf(" > fsUseSession\n");
+#endif
+
 	if (!sdmcInitialized)
 	{
 		sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
@@ -243,18 +282,6 @@ Result FS_fsInit(void)
 
 	if (!saveInitialized)
 	{
-
-		fsHandle = fsGetSessionHandle();
-#ifdef DEBUG_FS
-		printf(" > fsGetSessionHandle\n");
-#endif
-
-		ret = FSUSER_Initialize(*fsHandle);
-#ifdef DEBUG_FS
-		printf(" > FSUSER_Initialize: %lx\n", ret);
-#endif
-		if (R_FAILED(ret)) return ret;
-
 		saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
 
 		ret = FSUSER_OpenArchive(&saveArchive);
@@ -266,7 +293,11 @@ Result FS_fsInit(void)
 		saveInitialized = true;
 	}
 
-	fsState = STATE_INITIALIZED;
+	if (R_SUCCEEDED(ret))
+	{
+		fsState = STATE_INITIALIZED;
+	}
+
 	return ret;
 }
 
@@ -302,6 +333,20 @@ Result FS_fsExit(void)
 		saveInitialized = false;
 	}
 
-	fsState = STATE_UNINITIALIZED;
+	fsEndUseSession();
+#ifdef DEBUG_FS
+	printf(" > fsEndUseSession\n");
+#endif
+
+	ret = svcCloseHandle(fsHandle);
+#ifdef DEBUG_FS
+	printf(" > _srvGetServiceHandle: %lx\n", ret);
+#endif
+
+	if (R_SUCCEEDED(ret))
+	{
+		fsState = STATE_UNINITIALIZED;
+	}
+
 	return ret;
 }
