@@ -39,11 +39,11 @@ int main(int argc, char* argv[])
 
 	if (Save_getTitleId())
 	{
-		printf("\nCouldn't get the title id!");
+		printf("\nCouldn't get the title id!\n");
 	}
 	else
 	{
-		printf("\nTitle id well got!");
+		printf("\nTitle id well got!\n");
 	}
 
 	consoleSelect(&cmdConsole);
