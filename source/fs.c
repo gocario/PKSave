@@ -247,7 +247,7 @@ Result FS_fsInit(void)
 	fsState = STATE_INITIALIZING;
 
 #ifdef DEBUG_FS
-	printf("FS_filesysInit:\n");
+	printf("FS_fsInit:\n");
 #endif
 
 	ret = _srvGetServiceHandle(&fsHandle, "fs:USER");
@@ -307,7 +307,7 @@ Result FS_fsExit(void)
 	Result ret = 0;
 	fsState = STATE_UNINITIALIZING;
 #ifdef DEBUG_FS
-	printf("FS_filesysExit:\n");
+	printf("FS_fsExit:\n");
 #endif
 
 	if (sdmcInitialized)
@@ -333,15 +333,15 @@ Result FS_fsExit(void)
 		saveInitialized = false;
 	}
 
-	fsEndUseSession();
-#ifdef DEBUG_FS
-	printf(" > fsEndUseSession\n");
-#endif
+// 	fsEndUseSession();
+// #ifdef DEBUG_FS
+// 	printf(" > fsEndUseSession\n");
+// #endif
 
-	ret = svcCloseHandle(fsHandle);
-#ifdef DEBUG_FS
-	printf(" > _srvGetServiceHandle: %lx\n", ret);
-#endif
+// 	ret = svcCloseHandle(fsHandle);
+// #ifdef DEBUG_FS
+// 	printf(" > _srvGetServiceHandle: %lx\n", ret);
+// #endif
 
 	if (R_SUCCEEDED(ret))
 	{

@@ -124,6 +124,9 @@ int main(int argc, char* argv[])
 	}
 
 	FS_fsExit();
+
+	Save_removeSecureValue(NULL);
+
 	gfxExit();
 	return 0;
 }
