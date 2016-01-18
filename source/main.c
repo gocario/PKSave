@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
 
 		if (kDown & KEY_SELECT)
 		{
+			// Shouldn't work, because of the FS_fsInit
 			Save_removeSecureValue(NULL);
 		}
 
