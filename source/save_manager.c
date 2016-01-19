@@ -1,5 +1,6 @@
 #include "save_manager.h"
 #include "pkdir.h"
+#include "debug.h"
 #include "fs.h"
 
 #include <3ds/os.h>
@@ -33,13 +34,13 @@ Result Save_getTitleId(u64* titleId)
 	aptOpenSession();
 
 	ret = APT_GetProgramID(&_titleId);
-	printf(" > APT_GetProgramID: %lx\n", ret);
+	debug_print(" > APT_GetProgramID: %lx\n", ret);
 	if (R_FAILED(ret)) _titleId = 0;
 
 	aptCloseSession();
 
 	if (titleId) *titleId = _titleId;
-	printf("    > tid: 0x%016llx\n", _titleId);
+	debug_print("    > tid: 0x%016llx\n", _titleId);
 
 	return ret;
 }
@@ -78,7 +79,7 @@ u32 Save_titleIdToSize(u64 titleId)
 
 Result Save_exportSavedata(void)
 {
-	printf("Save_exportSavedata\n");
+	debug_print("Save_exportSavedata\n");
 	
 	Result ret;
 	char path[32];
@@ -87,21 +88,21 @@ Result Save_exportSavedata(void)
 	u8* savedata = malloc(SAVEDATA_MAX_SIZE);
 
 	ret = FS_CreateDirectory((char*) pk_baseFolder, &sdmcArchive);
-	printf(" > FS_CreateDirectory: %lx\n", ret);
+	debug_print(" > FS_CreateDirectory: %lx\n", ret);
 	ret = FS_CreateDirectory((char*) pk_saveFolder, &sdmcArchive);
-	printf(" > FS_CreateDirectory: %lx\n", ret);
+	debug_print(" > FS_CreateDirectory: %lx\n", ret);
 
 	sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 	ret = FS_ReadFile(path, savedata, &saveArchive, SAVEDATA_MAX_SIZE, &bytesRead);
-	printf(" > FS_ReadFile: %lx\n", ret);
+	debug_print(" > FS_ReadFile: %lx\n", ret);
 
 	if (R_SUCCEEDED(ret))
 	{
 		sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 		ret = FS_DeleteFile(path, &sdmcArchive);
-		printf(" > FS_DeleteFile: %lx\n", ret);
+		debug_print(" > FS_DeleteFile: %lx\n", ret);
 		ret = FS_WriteFile(path, savedata, bytesRead, &sdmcArchive, &bytesWritten);
-		printf(" > FS_WriteFile: %lx\n", ret);
+		debug_print(" > FS_WriteFile: %lx\n", ret);
 	}
 
 	free(savedata);
@@ -111,7 +112,7 @@ Result Save_exportSavedata(void)
 
 Result Save_importSavedata(void)
 {
-	printf("Save_importSavedata\n");
+	debug_print("Save_importSavedata\n");
 
 	Result ret;
 	char path[32];
@@ -121,28 +122,28 @@ Result Save_importSavedata(void)
 
 	sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 	ret = FS_ReadFile(path, (void*) savedata, &sdmcArchive, SAVEDATA_MAX_SIZE, &bytesRead);
-	printf(" > FS_ReadFile: %lx\n", ret);
+	debug_print(" > FS_ReadFile: %lx\n", ret);
 
 	// Check that is the same type of game that the export's.
 	if (R_SUCCEEDED(ret) && bytesRead == Save_titleIdToSize(_titleId))
 	{
 		ret = Save_removeSecureValue(NULL);
-		printf(" > Save_removeSecureValue: %lx\n", ret);
+		debug_print(" > Save_removeSecureValue: %lx\n", ret);
 
 		sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 		ret = FS_DeleteFile(path, &saveArchive);
-		printf(" > FS_DeleteFile: %lx\n", ret);
+		debug_print(" > FS_DeleteFile: %lx\n", ret);
 		ret = FS_WriteFile(path, (void*) savedata, bytesRead, &saveArchive, &bytesWritten);
-		printf(" > FS_WriteFile: %lx\n", ret);
+		debug_print(" > FS_WriteFile: %lx\n", ret);
 
 		if (R_SUCCEEDED(ret))
 		{
 			ret = FS_CommitArchive(&saveArchive);
-			printf(" > FS_CommitArchive: %lx\n", ret);
+			debug_print(" > FS_CommitArchive: %lx\n", ret);
 
 			sprintf(path, "%s%s", pk_saveFolder, pk_saveFile);
 			ret = FS_DeleteFile(path, &sdmcArchive);
-			printf(" > FS_DeleteFile: %lx\n", ret);
+			debug_print(" > FS_DeleteFile: %lx\n", ret);
 		}
 
 	}
@@ -154,7 +155,7 @@ Result Save_importSavedata(void)
 
 Result Save_backupSavedata(void)
 {
-	printf("Save_backupSavedata\n");
+	debug_print("Save_backupSavedata\n");
 
 	Result ret;
 	char path[32];
@@ -163,19 +164,19 @@ Result Save_backupSavedata(void)
 	u8* savedata = malloc(SAVEDATA_MAX_SIZE);
 
 	ret = FS_CreateDirectory((char*) pk_baseFolder, &sdmcArchive);
-	printf(" > FS_CreateDirectory: %lx\n", ret);
+	debug_print(" > FS_CreateDirectory: %lx\n", ret);
 	ret = FS_CreateDirectory((char*) pk_backupFolder, &sdmcArchive);
-	printf(" > FS_CreateDirectory: %lx\n", ret);
+	debug_print(" > FS_CreateDirectory: %lx\n", ret);
 
 	sprintf(path, "%s%s", pk_rootFolder, pk_saveFile);
 	ret = FS_ReadFile(path, savedata, &saveArchive, SAVEDATA_MAX_SIZE, &bytesRead);
-	printf(" > FS_ReadFile: %lx\n", ret);
+	debug_print(" > FS_ReadFile: %lx\n", ret);
 	
 	if (R_SUCCEEDED(ret))
 	{
 		sprintf(path, "%s_%s%lli", pk_backupFolder, pk_saveFile, osGetTime()/* - 2208988800L*/);
 		ret = FS_WriteFile(path, savedata, bytesRead, &sdmcArchive, &bytesWritten);
-		printf(" > FS_WriteFile: %lx\n", ret);
+		debug_print(" > FS_WriteFile: %lx\n", ret);
 	}
 
 	free(savedata);
@@ -186,13 +187,13 @@ Result Save_backupSavedata(void)
 
 Result Save_removeSecureValue(u8* ptr)
 {
-	printf("Save_removeSecureValue\n");
+	debug_print("Save_removeSecureValue\n");
 
 	Result ret;
 	FS_MediaType mediaType;
 
 	ret = FSUSER_GetMediaType(&mediaType);
-	printf(" > FSUSER_GetMediaType: %lx\n", ret);
+	debug_print(" > FSUSER_GetMediaType: %lx\n", ret);
 	if (R_FAILED(ret)) return ret;
 	if (mediaType != MEDIATYPE_SD) return -1;
 
@@ -201,11 +202,11 @@ Result Save_removeSecureValue(u8* ptr)
 	u8 out;
 
 	ret = FSUSER_ControlSecureSave(SECURESAVE_ACTION_DELETE, &in, 8, &out, 1);
-	printf(" > FSUSER_ControlSecureSave: %lx\n", ret);
+	debug_print(" > FSUSER_ControlSecureSave: %lx\n", ret);
 	// if (R_FAILED(ret)) return ret;
 
 	if (ptr) *ptr = out;
-	printf("    > out: %d\n", out);
+	debug_print("    > out: %d\n", out);
 
 	return ret;
 }

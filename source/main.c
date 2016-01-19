@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <stdio.h>
 
+#include "key.h"
 #include "fs.h"
 #include "save_manager.h"
 
@@ -9,8 +10,7 @@ void waitKey(u32 key)
 	while (aptMainLoop())
 	{
 		hidScanInput();
-		if (hidKeysDown() & key)
-			break;
+		if (hidKeysDown() & key) break;
 	}
 }
 
@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 {
 	gfxInitDefault();
 
+	Result ret;
 	PrintConsole cmdConsole, logConsole;
 	consoleInit(GFX_TOP, &cmdConsole);
 	consoleInit(GFX_BOTTOM, &logConsole);
@@ -35,7 +36,8 @@ int main(int argc, char* argv[])
 		printf("Good to go!\n\n");
 	}
 
-	if (Save_getTitleId(NULL))
+	ret = Save_getTitleId(NULL);
+	if (R_FAILED(ret))
 	{
 		printf("\nCouldn't get the title id!\n");
 	}
@@ -74,7 +76,7 @@ int main(int argc, char* argv[])
 		if (kDown & KEY_X)
 		{
 			printf("Exporting\n");
-			Result ret = Save_exportSavedata();
+			ret = Save_exportSavedata();
 
 			if (R_SUCCEEDED(ret))
 			{
@@ -89,7 +91,7 @@ int main(int argc, char* argv[])
 		if (kDown & KEY_Y)
 		{
 			printf("Importing\n");
-			Result ret = Save_importSavedata();
+			ret = Save_importSavedata();
 
 			if (R_SUCCEEDED(ret))
 			{
@@ -97,14 +99,14 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				printf("\nSomething mess up with the import!\n\n");
+				printf("\nSomething messed up with the import!\n\n");
 			}
 		}
 
 		if (kDown & KEY_A)
 		{
 			printf("Backing up\n");
-			Result ret = Save_backupSavedata();
+			ret = Save_backupSavedata();
 
 			if (R_SUCCEEDED(ret))
 			{
@@ -126,7 +128,19 @@ int main(int argc, char* argv[])
 
 	FS_fsExit();
 
-	Save_removeSecureValue(NULL);
+	ret = Save_removeSecureValue(NULL);
+	if (R_FAILED(ret))
+	{
+		printf("\nSecure value not removed.\n");
+		printf("It might be already unitialized.\n");
+	}
+	else
+	{
+		printf("\nSecure value removed!\n");
+	}
+
+	printf("\n\nProgram ended! Press any key to exit.");
+	waitKey(KEY_ANY);
 
 	gfxExit();
 	return 0;

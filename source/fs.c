@@ -284,12 +284,12 @@ Result FS_fsExit(void)
 
 // 	fsEndUseSession();
 // #ifdef DEBUG_FS
-// 	printf(" > fsEndUseSession\n");
+// 	debug_print(" > fsEndUseSession\n");
 // #endif
 
 // 	ret = svcCloseHandle(fsHandle);
 // #ifdef DEBUG_FS
-// 	printf(" > _srvGetServiceHandle: %lx\n", ret);
+// 	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
 // #endif
 
 	if (!sdmcInitialized && !saveInitialized)
