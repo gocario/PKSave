@@ -1,8 +1,8 @@
 #include <3ds.h>
 #include <stdio.h>
 
-#include "key.h"
 #include "fs.h"
+#include "key.h"
 #include "save_manager.h"
 
 void waitKey(u32 key)
@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
 	consoleInit(GFX_TOP, &cmdConsole);
 	consoleInit(GFX_BOTTOM, &logConsole);
 
+	// Init the filesystem service
 	FS_fsInit();
-
 	if (!FS_IsInitialized())
 	{
 		printf("\nFS not fully initialized!\n");
@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 		printf("Good to go!\n\n");
 	}
 
+	// Retrieve the title id of the current process
 	ret = Save_getTitleId(NULL);
 	if (R_FAILED(ret))
 	{
@@ -75,9 +76,8 @@ int main(int argc, char* argv[])
 
 		if (kDown & KEY_X)
 		{
-			printf("Exporting\n");
+			printf("Exporting...\n");
 			ret = Save_exportSavedata();
-
 			if (R_SUCCEEDED(ret))
 			{
 				printf("\nExportation was a success!\n\n");
@@ -90,9 +90,8 @@ int main(int argc, char* argv[])
 
 		if (kDown & KEY_Y)
 		{
-			printf("Importing\n");
+			printf("Importing...\n");
 			ret = Save_importSavedata();
-
 			if (R_SUCCEEDED(ret))
 			{
 				printf("\nImportation was a success!\n\n");
@@ -105,9 +104,8 @@ int main(int argc, char* argv[])
 
 		if (kDown & KEY_A)
 		{
-			printf("Backing up\n");
+			printf("Backing up...\n");
 			ret = Save_backupSavedata();
-
 			if (R_SUCCEEDED(ret))
 			{
 				printf("\nThe backup was a success!\n\n");
@@ -132,7 +130,7 @@ int main(int argc, char* argv[])
 	if (R_FAILED(ret))
 	{
 		printf("\nSecure value not removed.\n");
-		printf("It might be already unitialized.\n");
+		printf("It might already be unitialized.\n");
 	}
 	else
 	{

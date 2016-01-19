@@ -16,10 +16,6 @@
 #define SAVEDATA_MIN_SIZE  (SAVEDATA_XY_SIZE)
 #define SAVEDATA_MAX_SIZE  (SAVEDATA_ORAS_SIZE)
 
-#define SV_SIZE        (0x8)
-#define SV_XY_OFFSET   (0x65400)
-#define SV_ORAS_OFFSET (0x75e00)
-
 #define TID_X  (0x0004000000055D00LL)
 #define TID_Y  (0x0004000000055E00LL)
 #define TID_OR (0x000400000011C400LL)
@@ -197,8 +193,7 @@ Result Save_removeSecureValue(u8* ptr)
 	if (R_FAILED(ret)) return ret;
 	if (mediaType != MEDIATYPE_SD) return -1;
 
-	u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | (_titleId & 0xFFFFFFFF);
-	// u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | ((u32) _titleId);
+	u64 in = ((u64) SECUREVALUE_SLOT_SD << 32) | ((u32) _titleId);
 	u8 out;
 
 	ret = FSUSER_ControlSecureSave(SECURESAVE_ACTION_DELETE, &in, 8, &out, 1);

@@ -57,25 +57,6 @@ static bool FS_FixBasicArchive(FS_Archive** archive)
 #endif
 
 
-static Result _srvGetServiceHandle(Handle* out, const char* name)
-{
-	Result ret;
-
-	u32* cmdbuf = getThreadCommandBuffer();
-	cmdbuf[0] = IPC_MakeHeader(0x5,4,0); // 0x50100
-	strcpy((char*) &cmdbuf[1], name);
-	cmdbuf[3] = strlen(name);
-	cmdbuf[4] = 0x0;
-
-	ret = svcSendSyncRequest(*srvGetSessionHandle());
-	if (R_FAILED(ret)) return ret;
-
-	if (out) *out = cmdbuf[3];
-
-	return cmdbuf[1];
-}
-
-
 bool FS_IsInitialized(void)
 {
 	return (fsState == STATE_INITIALIZED);
@@ -218,7 +199,7 @@ Result FS_fsInit(void)
 
 	debug_print("FS_fsInit:\n");
 
-	ret = _srvGetServiceHandle(&fsHandle, "fs:USER");
+	ret = srvGetServiceHandleDirect(&fsHandle, "fs:USER");
 	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
 	if (R_FAILED(ret)) return ret;
 
@@ -231,7 +212,7 @@ Result FS_fsInit(void)
 
 	if (!sdmcInitialized)
 	{
-		sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
+		sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL), fsHandle };
 
 		ret = FSUSER_OpenArchive(&sdmcArchive);
 		debug_print(" > FSUSER_OpenArchive: %lx\n", ret);
@@ -241,7 +222,7 @@ Result FS_fsInit(void)
 
 	if (!saveInitialized)
 	{
-		saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
+		saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL), fsHandle };
 
 		ret = FSUSER_OpenArchive(&saveArchive);
 		debug_print(" > FSUSER_OpenArchive: %lx\n", ret);
@@ -282,15 +263,11 @@ Result FS_fsExit(void)
 		saveInitialized = false;
 	}
 
-// 	fsEndUseSession();
-// #ifdef DEBUG_FS
-// 	debug_print(" > fsEndUseSession\n");
-// #endif
+	fsEndUseSession();
+	debug_print(" > fsEndUseSession\n");
 
-// 	ret = svcCloseHandle(fsHandle);
-// #ifdef DEBUG_FS
-// 	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
-// #endif
+	ret = svcCloseHandle(fsHandle);
+	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
 
 	if (!sdmcInitialized && !saveInitialized)
 	{
