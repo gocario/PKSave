@@ -8,10 +8,10 @@ sdmc
 │   ├───PHBank
 │   │   ├───PHBank.3dsx
 │   │   └───PHBank.smdh
-│   └───(Pokémon Save Manager)
-│       ├───(Pokémon Save Manager).3dsx
-│       ├───(Pokémon Save Manager).smdh
-│       └───(Pokémon Save Manager).xml
+│   └───PKSave
+│       ├───PKSave.3dsx
+│       ├───PKSave.smdh
+│       └───PKSave.xml
 └───pk
     ├───backup
     |   ├───bank_159482673
@@ -25,7 +25,7 @@ sdmc
     ├───save
     │   └───main
     |
-    ├───hex++
+    ├───PCHex++
     │   └[{...}]
     └───bank
         └[{...}]
