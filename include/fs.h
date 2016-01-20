@@ -34,6 +34,7 @@ bool FS_IsInitialized(void);
 /**
  * @brief Returns true if the archive is initialized.
  * @return Whether the archive id is initialized.
+ * @deprecated @useless
  */
 bool FS_IsArchiveInitialized(FS_Archive* archive);
 
@@ -86,13 +87,13 @@ Result FS_CommitArchive(FS_Archive* archive);
  * @brief Initializes the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysInit(void);
+Result FS_fsInit(void);
 
 /**
  * @brief Exits the filesystem service.
  * @return The error encountered.
  */
-Result FS_FilesysExit(void);
+Result FS_fsExit(void);
 
 #ifdef __cplusplus
 }

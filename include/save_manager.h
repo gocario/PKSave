@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @file fs.h
+ * @file save_manager.h
  * @brief Save Manager
  */
 #ifndef SAVE_MANAGER_H
@@ -11,6 +11,33 @@ extern "C" {
 #endif
 
 #include <3ds/types.h>
+
+/**
+ * @brief Retrieves some data of the current process.
+ * @param titleId @optional The title id returned;
+ * @return The error encountered.
+ */
+Result Save_getTitleId(u64* titleId);
+
+/**
+ * @brief Checks if a title id is a Pokémon title id.
+ * @param titleId The id of the title.
+ * @return Whether the title is a Pokémon title.
+ */
+bool Save_titleIdIsPokemon(u64 titleId);
+
+/**
+ * @brief Retrieves the size of the savedata of a title based on its id.
+ * @param titleId The id of the title.
+ * @return The size of the savedata of the tile.
+ */
+u32 Save_titleIdToSize(u64 titleId);
+
+/**
+ * @brief Retrieves some data of the current process.
+ * @return The error encountered.
+ */
+Result Save_getMediaType(void);
 
 /**
  * @brief Exports the savedata from the card/title to the SD.
@@ -29,6 +56,13 @@ Result Save_importSavedata(void);
  * @return The error encountered.
  */
 Result Save_backupSavedata(void);
+
+/**
+ * @brief remove the secure value of the title in the NAND.
+ * @param ptr @optional The out value returned.
+ * @return The error encountered.
+ */
+Result Save_removeSecureValue(u8* ptr);
 
 #ifdef __cplusplus
 }

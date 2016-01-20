@@ -2,45 +2,53 @@
 
 #include <3ds/services/fs.h>
 #include <3ds/result.h>
+#include <3ds/ipc.h>
 #include <3ds/srv.h>
 #include <3ds/svc.h>
 
+#include <string.h>
+
 #define DEBUG_FS
+// #define DEBUG_FIX_ARCHIVE_FS
 
 #ifdef DEBUG_FS
 #include <stdio.h>
+#define debug_print(fmt, args ...) printf(fmt, ##args)
+#else
+#define debug_print(fmt, args ...)
 #endif
 
 typedef enum {
 	STATE_UNINITIALIZED,
+	STATE_UNINITIALIZING,
 	STATE_INITIALIZING,
 	STATE_INITIALIZED,
 } FS_State;
 
-static Handle* fsHandle = NULL;
+static Handle fsHandle;
 static FS_State fsState = STATE_UNINITIALIZED;
 static bool sdmcInitialized = false;
 static bool saveInitialized = false;
 FS_Archive sdmcArchive;
 FS_Archive saveArchive;
 
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 /**
- * @return Whether the archive is working.
+ * @return Whether the archive fix is working.
  */
 static bool FS_FixBasicArchive(FS_Archive** archive)
 {
-	printf("FS_FixBasicArchive:\n");
+	debug_print("FS_FixBasicArchive:\n");
 
 	if (!saveInitialized && *archive == &saveArchive)
 	{
-		printf("   Save archive not initialized\n");
+		debug_print("   Save archive not initialized\n");
 		*archive = &sdmcArchive;
 	}
 
 	if (!sdmcInitialized && *archive == &sdmcArchive)
 	{
-		printf("   Sdmc archive not initialized\n");
+		debug_print("   Sdmc archive not initialized\n");
 		*archive = NULL;
 	}
 
@@ -52,6 +60,7 @@ static bool FS_FixBasicArchive(FS_Archive** archive)
 bool FS_IsInitialized(void)
 {
 	return (fsState == STATE_INITIALIZED);
+	// return (sdmcInitialize && saveInitialized);
 }
 
 
@@ -66,7 +75,7 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 {
 	if (!path || !dst || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
@@ -74,35 +83,25 @@ Result FS_ReadFile(char* path, void* dst, FS_Archive* archive, u64 maxSize, u32*
 	u64 size;
 	Handle fileHandle;
 
-#ifdef DEBUG_FS
-	printf("FS_ReadFile:\n");
-#endif
+	debug_print("FS_ReadFile:\n");
 
 	ret = FSUSER_OpenFile(&fileHandle, *archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, FS_ATTRIBUTE_DIRECTORY);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_OpenFile: %lx\n", ret);
-#endif
+	debug_print(" > FSUSER_OpenFile: %lx\n", ret);
 	if (R_FAILED(ret)) return ret;
 
 	ret = FSFILE_GetSize(fileHandle, &size);
-#ifdef DEBUG_FS
-	printf(" > FSFILE_GetSize: %lx\n", ret);
-#endif
+	debug_print(" > FSFILE_GetSize: %lx\n", ret);
 	if (R_FAILED(ret) || size > maxSize) ret = -2;
 
 	if (R_SUCCEEDED(ret))
 	{
 		ret = FSFILE_Read(fileHandle, bytesRead, 0x0, dst, size);
-#ifdef DEBUG_FS
-		printf(" > FSFILE_Read: %lx\n", ret);
-#endif
+		debug_print(" > FSFILE_Read: %lx\n", ret);
 		if (R_FAILED(ret) || *bytesRead < size) ret = -3;
 	}
 
 	ret = FSFILE_Close(fileHandle);
-#ifdef DEBUG_FS
-	printf(" > FSFILE_Close: %lx\n", ret);
-#endif
+	debug_print(" > FSFILE_Close: %lx\n", ret);
 
 	return ret;
 }
@@ -112,36 +111,28 @@ Result FS_WriteFile(char* path, void* src, u64 size, FS_Archive* archive, u32* b
 {
 	if (!path || !src || !archive) return -1;
 
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
 	Handle fileHandle;
 
-#ifdef DEBUG_FS
-	printf("FS_WriteFile:\n");
-#endif
+	debug_print("FS_WriteFile:\n");
 
 	ret = FSUSER_OpenFile(&fileHandle, *archive, fsMakePath(PATH_ASCII, path), FS_OPEN_WRITE | FS_OPEN_CREATE, FS_ATTRIBUTE_DIRECTORY);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_OpenFile: %lx\n", ret);
-#endif
+	debug_print(" > FSUSER_OpenFile: %lx\n", ret);
 	if (R_FAILED(ret)) return ret;
 
 	if (R_SUCCEEDED(ret))
 	{
 		ret = FSFILE_Write(fileHandle, bytesWritten, 0L, src, size, FS_WRITE_FLUSH);
-#ifdef DEBUG_FS
-		printf(" > FSFILE_Write: %lx\n", ret);
-#endif
+		debug_print(" > FSFILE_Write: %lx\n", ret);
 		if (R_FAILED(ret) || *bytesWritten != size) ret = -2;
 	}
 
 	ret = FSFILE_Close(fileHandle);
-#ifdef DEBUG_FS
-	printf(" > FSFILE_Close: %lx\n", ret);
-#endif
+	debug_print(" > FSFILE_Close: %lx\n", ret);
 
 	return ret;
 }
@@ -151,20 +142,16 @@ Result FS_DeleteFile(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
 
-#ifdef DEBUG_FS
-	printf("FS_DeleteFile:\n");
-#endif
+	debug_print("FS_DeleteFile:\n");
 
 	ret = FSUSER_DeleteFile(*archive, fsMakePath(PATH_ASCII, path));
-#ifdef DEBUG_FS
-	printf(" > FSUSER_DeleteFile: %lx\n", ret);
-#endif
+	debug_print(" > FSUSER_DeleteFile: %lx\n", ret);
 
 	return ret;
 }
@@ -174,20 +161,16 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 {
 	if (!path || !archive) return -1;
 	
-#ifdef DEBUG_FS
+#ifdef DEBUG_FIX_ARCHIVE_FS
 	if (!FS_FixBasicArchive(&archive)) return -1;
 #endif
 
 	Result ret;
 
-#ifdef DEBUG_FS
-	printf("FS_CreateDirectory:\n");
-#endif
+	debug_print("FS_CreateDirectory:\n");
 
 	ret = FSUSER_CreateDirectory(*archive, fsMakePath(PATH_ASCII, path), FS_ATTRIBUTE_DIRECTORY);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_CreateDirectory: %lx\n", ret);
-#endif
+	debug_print(" > FSUSER_CreateDirectory: %lx\n", ret);
 
 	return ret;
 }
@@ -195,97 +178,101 @@ Result FS_CreateDirectory(char* path, FS_Archive* archive)
 
 Result FS_CommitArchive(FS_Archive* archive)
 {
-	Result ret;
-
-#ifdef DEBUG_FS
-	printf("FS_CommitArchive:\n");
-#endif
-
-		ret = FSUSER_ControlArchive(*archive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
-#ifdef DEBUG_FS
-		printf(" > FSUSER_ControlArchive: %lx\n", ret);
-#endif
-
-		return ret;
-}
-
-
-Result FS_FilesysInit(void)
-{
 	Result ret = 0;
-	fsState = STATE_INITIALIZING;
 
-#ifdef DEBUG_FS
-	printf("FS_filesysInit:\n");
-#endif
+	debug_print("FS_CommitArchive:\n");
 
-	sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL) };
+	if (saveInitialized)
+	{
+		ret = FSUSER_ControlArchive(*archive, ARCHIVE_ACTION_COMMIT_SAVE_DATA, NULL, 0, NULL, 0);
+		debug_print(" > FSUSER_ControlArchive: %lx\n", ret);
+	}
 
-	ret = FSUSER_OpenArchive(&sdmcArchive);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_OpenArchive: %lx\n", ret);
-#endif
-	if (R_FAILED(ret)) return ret;
-
-	sdmcInitialized = true;
-
-	fsHandle = fsGetSessionHandle();
-#ifdef DEBUG_FS
-	printf(" > fsGetSessionHandle\n");
-#endif
-
-	ret = FSUSER_Initialize(*fsHandle);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_Initialize: %lx\n", ret);
-#endif
-	if (R_FAILED(ret)) return ret;
-
-	saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL) };
-
-	ret = FSUSER_OpenArchive(&saveArchive);
-#ifdef DEBUG_FS
-	printf(" > FSUSER_OpenArchive: %lx\n", ret);
-#endif
-	if (R_FAILED(ret)) return ret;
-
-	saveInitialized = true;
-
-	fsState = STATE_INITIALIZED;
 	return ret;
 }
 
 
-Result FS_FilesysExit(void)
+Result FS_fsInit(void)
 {
 	Result ret = 0;
+	fsState = STATE_INITIALIZING;
 
-#ifdef DEBUG_FS
-	printf("FS_filesysExit:\n");
-#endif
+	debug_print("FS_fsInit:\n");
+
+	ret = srvGetServiceHandleDirect(&fsHandle, "fs:USER");
+	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
+	if (R_FAILED(ret)) return ret;
+
+	ret = FSUSER_Initialize(fsHandle);
+	debug_print(" > FSUSER_Initialize: %lx\n", ret);
+	if (R_FAILED(ret)) return ret;
+
+	fsUseSession(fsHandle, false);
+	debug_print(" > fsUseSession\n");
+
+	if (!sdmcInitialized)
+	{
+		sdmcArchive = (FS_Archive) { ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL), fsHandle };
+
+		ret = FSUSER_OpenArchive(&sdmcArchive);
+		debug_print(" > FSUSER_OpenArchive: %lx\n", ret);
+
+		sdmcInitialized = R_SUCCEEDED(ret);
+	}
+
+	if (!saveInitialized)
+	{
+		saveArchive = (FS_Archive) { ARCHIVE_SAVEDATA, fsMakePath(PATH_EMPTY, NULL), fsHandle };
+
+		ret = FSUSER_OpenArchive(&saveArchive);
+		debug_print(" > FSUSER_OpenArchive: %lx\n", ret);
+
+		saveInitialized = R_SUCCEEDED(ret);
+	}
+
+	if (sdmcInitialized && saveInitialized)
+	{
+		fsState = STATE_INITIALIZED;
+	}
+
+	return ret;
+}
+
+
+Result FS_fsExit(void)
+{
+	Result ret = 0;
+	fsState = STATE_UNINITIALIZING;
+	
+	debug_print("FS_fsExit:\n");
 
 	if (sdmcInitialized)
 	{
 		ret = FSUSER_CloseArchive(&sdmcArchive);
-#ifdef DEBUG_FS
-		printf(" > FSUSER_CloseArchive: %lx\n", ret);
-#endif
+		debug_print(" > FSUSER_CloseArchive: %lx\n", ret);
 		sdmcInitialized = false;
 	}
 
 	if (saveInitialized)
 	{
 		ret = FS_CommitArchive(&saveArchive);
-#ifdef DEBUG_FS
-		printf(" > FS_CommitArchive: %lx\n", ret);
-#endif
+		debug_print(" > FS_CommitArchive: %lx\n", ret);
 
 		ret = FSUSER_CloseArchive(&saveArchive);
-#ifdef DEBUG_FS
-		printf(" > FSUSER_CloseArchive: %lx\n", ret);
-#endif
+		debug_print(" > FSUSER_CloseArchive: %lx\n", ret);
 		saveInitialized = false;
 	}
 
-	fsState = STATE_UNINITIALIZED;
+	fsEndUseSession();
+	debug_print(" > fsEndUseSession\n");
+
+	ret = svcCloseHandle(fsHandle);
+	debug_print(" > _srvGetServiceHandle: %lx\n", ret);
+
+	if (!sdmcInitialized && !saveInitialized)
+	{
+		fsState = STATE_UNINITIALIZED;
+	}
+
 	return ret;
 }

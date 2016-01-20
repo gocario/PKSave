@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "fs.h"
+#include "key.h"
 #include "save_manager.h"
 
 void waitKey(u32 key)
@@ -9,8 +10,7 @@ void waitKey(u32 key)
 	while (aptMainLoop())
 	{
 		hidScanInput();
-		if (hidKeysDown() & key)
-			break;
+		if (hidKeysDown() & key) break;
 	}
 }
 
@@ -18,12 +18,13 @@ int main(int argc, char* argv[])
 {
 	gfxInitDefault();
 
+	Result ret;
 	PrintConsole cmdConsole, logConsole;
 	consoleInit(GFX_TOP, &cmdConsole);
 	consoleInit(GFX_BOTTOM, &logConsole);
 
-	FS_FilesysInit();
-
+	// Init the filesystem service
+	FS_fsInit();
 	if (!FS_IsInitialized())
 	{
 		printf("\nFS not fully initialized!\n");
@@ -33,6 +34,17 @@ int main(int argc, char* argv[])
 	{
 		printf("\nFS fully initialized!\n");
 		printf("Good to go!\n\n");
+	}
+
+	// Retrieve the title id of the current process
+	ret = Save_getTitleId(NULL);
+	if (R_FAILED(ret))
+	{
+		printf("\nCouldn't get the title id!\n");
+	}
+	else
+	{
+		printf("\nTitle id well got!\n");
 	}
 
 	consoleSelect(&cmdConsole);
@@ -52,30 +64,56 @@ int main(int argc, char* argv[])
 	u32 kDown;
 	while (aptMainLoop())
 	{
-
 		hidScanInput();
 
 		kDown = hidKeysDown();
 
+		if (kDown & KEY_SELECT)
+		{
+			// Shouldn't work, because of the FS_fsInit
+			Save_removeSecureValue(NULL);
+		}
+
 		if (kDown & KEY_X)
 		{
-			printf("Exporting\n");
-			Result ret = Save_exportSavedata();
-			printf("Exported? %li\n", ret);
+			printf("Exporting...\n");
+			ret = Save_exportSavedata();
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nExportation was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething mess up with the export!\n\n");
+			}
 		}
 
 		if (kDown & KEY_Y)
 		{
-			printf("Importing\n");
-			Result ret = Save_importSavedata();
-			printf("Imported: %li\n", ret);
+			printf("Importing...\n");
+			ret = Save_importSavedata();
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nImportation was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething messed up with the import!\n\n");
+			}
 		}
 
 		if (kDown & KEY_A)
 		{
-			printf("Backing up\n");
-			Result ret = Save_backupSavedata();
-			printf("Backed up: %li\n", ret);
+			printf("Backing up...\n");
+			ret = Save_backupSavedata();
+			if (R_SUCCEEDED(ret))
+			{
+				printf("\nThe backup was a success!\n\n");
+			}
+			else
+			{
+				printf("\nSomething mess up with the backup!\n\n");
+			}
 		}
 
 		if (kDown & KEY_B)
@@ -86,7 +124,21 @@ int main(int argc, char* argv[])
 		gspWaitForVBlank();
 	}
 
-	FS_FilesysExit();
+	FS_fsExit();
+
+	ret = Save_removeSecureValue(NULL);
+	if (R_FAILED(ret))
+	{
+		printf("\nSecure value not removed.\n");
+		printf("It might already be unitialized.\n");
+	}
+	else
+	{
+		printf("\nSecure value removed!\n");
+	}
+
+	printf("\n\nProgram ended! Press any key to exit.");
+	waitKey(KEY_ANY);
 
 	gfxExit();
 	return 0;
