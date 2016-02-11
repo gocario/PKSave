@@ -1,4 +1,5 @@
 build/
-*.3dsx
-*.elf
-*.smdh
+PKSave.elf
+PKSave.3dsx
+PKSave.smdh
+PKSave.xml

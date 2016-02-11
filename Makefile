@@ -29,15 +29,18 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
 DATA		:=	data
+SOURCES		:=	source
 INCLUDES	:=	include
-#ROMFS		:=	romfs
+# ROMFS		:=	romfs
 
-NO_SMDH 		:= NO_SMDH
-APP_TITLE       := Pokémon Title Selector
-APP_DESCRIPTION := Pokémon Title Selector
-APP_AUTHOR      := Gocario & Slashcash
+APP_TITLE		:= Pokémon Title Selector
+APP_DESCRIPTION	:= Pokémon Title Selector
+APP_AUTHOR		:= Gocario & Slashcash
+
+# NO_SMDH			:= NO_SMDH
+ICON			:=	assets/icon-48px.png
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
